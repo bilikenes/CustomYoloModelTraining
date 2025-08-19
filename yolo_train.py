@@ -1,8 +1,13 @@
 from ultralytics import YOLO
 
-model = YOLO('yolov12n.pt')
+def train_model():
+    # Buraya eğitim kodunu koyuyoruz
+    model = YOLO('yolov12n.pt')
+    results = model.train(
+        data='C:/Users/PC/Desktop/plates/dataset/data.yaml',
+        epochs=50,
+        device=0
+    )
 
-results = model.train(
-    data=f'{"D:/Medias/dataset"}/data.yaml',
-    epochs=50
-)
+if __name__ == "__main__":
+    train_model()
