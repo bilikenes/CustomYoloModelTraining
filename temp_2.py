@@ -77,7 +77,24 @@ for i in range(9, 29):
             print(f"Kopyalandı: {kaynak_dosya} -> {hedef_dosya}")"""
 
 
-import torch
+"""import torch
 
 print(torch.cuda.is_available())  # True ise GPU kullanılabilir
 print(torch.cuda.get_device_name(0))  # GPU ismini gösterir
+"""
+
+import os
+
+# Buraya klasör yolunu yaz
+klasor_yolu = r"C:\Users\PC\Desktop\plates\07\31"   # Örn: Windows
+# klasor_yolu = "/home/kullanici/resimler"  # Örn: Linux/macOS
+
+# Klasördeki dosyaları kontrol et
+for dosya in os.listdir(klasor_yolu):
+    if dosya.startswith("Okunamadı"):
+        dosya_yolu = os.path.join(klasor_yolu, dosya)
+        if os.path.isfile(dosya_yolu):  # sadece dosyaları sil
+            os.remove(dosya_yolu)
+            print(f"Silindi: {dosya_yolu}")
+
+print("ok")
