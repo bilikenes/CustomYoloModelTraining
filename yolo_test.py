@@ -2,13 +2,13 @@ import cv2
 import os
 from ultralytics import YOLO
 
-model = YOLO(r"D:\Python Files\yolov12\runs\detect\train2\weights\best.pt")
+model = YOLO(r"C:\Users\PC\Desktop\Yolo Model\CustomYoloModelTraining\runs\detect\train4\weights\best.pt")
 
-save_dir = r"D:\Medias\plates\rectangle_plates\rectangle_plates_01_31"
+save_dir = r"C:\Users\PC\Desktop\plates\detected_plates\01\31"
 os.makedirs(save_dir, exist_ok=True)
 
 results = model.predict(
-    source=r"D:\Medias\plates\01\31",
+    source=r"C:\Users\PC\Desktop\plates\01\31",
     conf=0.50,
     save=False
 )

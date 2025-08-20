@@ -1,7 +1,7 @@
 from ultralytics import YOLO
 
 def train_model():
-    # Buraya eğitim kodunu koyuyoruz
+
     model = YOLO('yolov12n.pt')
     results = model.train(
         data='C:/Users/PC/Desktop/plates/dataset/data.yaml',
