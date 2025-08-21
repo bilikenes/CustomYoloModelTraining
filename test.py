@@ -36,12 +36,12 @@ idx_to_char = {idx+1: char for idx, char in enumerate(characters)}
 idx_to_char[0] = ''  # CTC blank
 
 nclass = len(characters) + 1
-ocr_model = CRNN(64, 1, nclass, 256)
-ocr_model.load_state_dict(torch.load(r'D:\EasyOcrModel\EasyOCRTraining\turkish_plate_crnn.pth', map_location='cpu'))
+ocr_model = CRNN(32, 1, nclass, 256)
+ocr_model.load_state_dict(torch.load(r'C:\Users\PC\Desktop\OCR Model\EasyOCRTraining\turkish_plate_crnn.pth', map_location='cpu'))
 ocr_model.eval()
 
 ocr_transform = transforms.Compose([
-    transforms.Resize((64, 128)),
+    transforms.Resize((32, 128)),
     transforms.ToTensor(),
     transforms.Normalize((0.5,), (0.5,))
 ])
@@ -66,7 +66,7 @@ def recognize_plate(img_bgr):
     return text.strip()
 
 model = YOLO(r"runs\detect\train4\weights\best.pt")
-video_path = r"D:\Medias\0821_3.mp4"
+video_path = r"C:\Users\PC\Desktop\plates\0821_1.mp4"
 
 save_dir = "detected_plates"
 os.makedirs(save_dir, exist_ok=True)
@@ -80,7 +80,7 @@ cap = cv2.VideoCapture(video_path)
 fps = cap.get(cv2.CAP_PROP_FPS)
 frame_count = 0
 save_count = 0
-frame_skip = 8
+frame_skip = 2
 
 while cap.isOpened():
     ret, frame = cap.read()

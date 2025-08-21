@@ -134,7 +134,7 @@ import os
 import csv
 
 model = YOLO(r"runs\detect\train4\weights\best.pt")
-video_path = r"D:\Medias\0821_3.mp4"
+video_path = r"C:\Users\PC\Desktop\plates\0821_1.mp4"
 
 save_dir = "detected_plates"
 os.makedirs(save_dir, exist_ok=True)
@@ -148,7 +148,7 @@ cap = cv2.VideoCapture(video_path)
 fps = cap.get(cv2.CAP_PROP_FPS)
 frame_count = 0
 save_count = 0
-frame_skip = 8
+frame_skip = 2
 
 while cap.isOpened():
     ret, frame = cap.read()

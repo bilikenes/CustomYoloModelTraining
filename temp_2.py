@@ -87,7 +87,6 @@ import os
 
 # Buraya klasör yolunu yaz
 klasor_yolu = r"C:\Users\PC\Desktop\plates\07\31"   # Örn: Windows
-# klasor_yolu = "/home/kullanici/resimler"  # Örn: Linux/macOS
 
 # Klasördeki dosyaları kontrol et
 for dosya in os.listdir(klasor_yolu):

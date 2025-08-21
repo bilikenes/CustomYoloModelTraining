@@ -1,90 +1,98 @@
-import cv2
-import os
-from ultralytics import YOLO
-
-model = YOLO(r"runs\detect\train4\weights\best.pt")
-
-save_dir = r"C:\Users\enesb\OneDrive\Masaüstü\data\detected_plates\15"
-os.makedirs(save_dir, exist_ok=True)
-
-results = model.predict(
-    source=r"C:\Users\enesb\OneDrive\Masaüstü\data\15",
-    conf=0.50,
-    save=False
-)
-
-count = 0
-for r in results:
-    best_box = None
-    best_conf = -1
-
-    for box in r.boxes:
-        cls = int(box.cls[0])
-        conf = float(box.conf[0])
-
-        if cls == 0 and conf > best_conf:
-            best_conf = conf
-            best_box = box
-
-    if best_box is not None:
-        x1, y1, x2, y2 = map(int, best_box.xyxy[0])
-        img = cv2.imread(r.path)
-        plate_crop = img[y1:y2, x1:x2]
-
-        base_name = os.path.basename(r.path)
-        plate_name = base_name.split("-")[0] + ".jpg"
-
-        filename = os.path.join(save_dir, plate_name)
-        cv2.imwrite(filename, plate_crop)
-        count += 1
-
-print(f"total : {count} and OK")
-
-
-# import os
 # import cv2
+# import os
 # from ultralytics import YOLO
 
-# model = YOLO(r"C:\Users\PC\Desktop\Yolo Model\CustomYoloModelTraining\runs\detect\train4\weights\best.pt")
+# model = YOLO(r"runs\detect\train4\weights\best.pt")
 
-# root_dir = r"C:\Users\PC\Desktop\plates\07"
-# save_root = r"C:\Users\PC\Desktop\plates\detected_plates\07"
+# save_dir = r"C:\Users\enesb\OneDrive\Masaüstü\data\detected_plates\15"
+# os.makedirs(save_dir, exist_ok=True)
 
-# total_count = 0
+# results = model.predict(
+#     source=r"C:\Users\enesb\OneDrive\Masaüstü\data\15",
+#     conf=0.50,
+#     save=False
+# )
 
-# for subdir, dirs, files in os.walk(root_dir):
-#     if not files:
-#         continue
+# count = 0
+# for r in results:
+#     best_box = None
+#     best_conf = -1
 
-#     relative_path = os.path.relpath(subdir, root_dir)
-#     save_dir = os.path.join(save_root, relative_path)
-#     os.makedirs(save_dir, exist_ok=True)
+#     for box in r.boxes:
+#         cls = int(box.cls[0])
+#         conf = float(box.conf[0])
 
-#     results = model.predict(
-#         source=subdir,
-#         conf=0.50,
-#         save=False
-#     )
+#         if cls == 0 and conf > best_conf:
+#             best_conf = conf
+#             best_box = box
 
-#     count = 0
-#     for r in results:
-#         for box in r.boxes:
-#             cls = int(box.cls[0])
-#             conf = float(box.conf[0])
+#     if best_box is not None:
+#         x1, y1, x2, y2 = map(int, best_box.xyxy[0])
+#         img = cv2.imread(r.path)
+#         plate_crop = img[y1:y2, x1:x2]
 
-#             if cls == 0 and conf > 0.50:
-#                 x1, y1, x2, y2 = map(int, box.xyxy[0])
+#         base_name = os.path.basename(r.path)
+#         plate_name = base_name.split("-")[0] + ".jpg"
 
-#                 img = cv2.imread(r.path)
-#                 plate_crop = img[y1:y2, x1:x2]
+#         filename = os.path.join(save_dir, plate_name)
+#         cv2.imwrite(filename, plate_crop)
+#         count += 1
 
-#                 base_name = os.path.basename(r.path)
-#                 plate_name = base_name.split("-")[0] + ".jpg"
+# print(f"total : {count} and OK")
 
-#                 filename = os.path.join(save_dir, plate_name)
-#                 cv2.imwrite(filename, plate_crop)
-#                 count += 1
 
-#     total_count += count
+import os
+import cv2
+from ultralytics import YOLO
 
-# print(f"ok : {total_count}")
+model = YOLO(r"C:\Users\PC\Desktop\Yolo Model\CustomYoloModelTraining\runs\detect\train4\weights\best.pt")
+
+root_dir = r"C:\Users\PC\Desktop\plates\07"
+save_root = r"C:\Users\PC\Desktop\plates\detected_plates\07"
+
+total_count = 0
+
+for subdir, dirs, files in os.walk(root_dir):
+    if not files:
+        continue
+
+    relative_path = os.path.relpath(subdir, root_dir)
+    save_dir = os.path.join(save_root, relative_path)
+    os.makedirs(save_dir, exist_ok=True)
+
+    results = model.predict(
+        source=subdir,
+        conf=0.50,
+        save=False
+    )
+
+    count = 0
+    for r in results:
+        best_box = None
+        best_conf = 0.0
+
+        # en yüksek confidence'i seç
+        for box in r.boxes:
+            cls = int(box.cls[0])
+            conf = float(box.conf[0])
+            if cls == 0 and conf > 0.50 and conf > best_conf:
+                best_conf = conf
+                best_box = box
+
+        # eğer uygun box bulunduysa kırp ve kaydet
+        if best_box is not None:
+            x1, y1, x2, y2 = map(int, best_box.xyxy[0])
+            img = cv2.imread(r.path)
+            plate_crop = img[y1:y2, x1:x2]
+
+            base_name = os.path.basename(r.path)
+            plate_name = base_name.split("-")[0] + ".jpg"
+
+            filename = os.path.join(save_dir, plate_name)
+            cv2.imwrite(filename, plate_crop)
+            count += 1
+
+    total_count += count
+
+print(f"ok : {total_count}")
+
