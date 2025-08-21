@@ -2,13 +2,13 @@ import cv2
 import os
 from ultralytics import YOLO
 
-model = YOLO(r"C:\Users\PC\Desktop\Yolo Model\CustomYoloModelTraining\runs\detect\train4\weights\best.pt")
+model = YOLO(r".\runs\detect\train4\weights\best.pt")
 
-save_dir = r"C:\Users\PC\Desktop\plates\detected_plates\01\31"
+save_dir = r"C:\Users\enesb\OneDrive\Masaüstü\data\detected_plates\15"
 os.makedirs(save_dir, exist_ok=True)
 
 results = model.predict(
-    source=r"C:\Users\PC\Desktop\plates\01\31",
+    source=r"C:\Users\enesb\OneDrive\Masaüstü\data\15",
     conf=0.50,
     save=False
 )
@@ -36,10 +36,10 @@ for r in results:
         label = f"Plate {best_conf:.2f}"
         cv2.putText(img, label, (x1, y1 - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+        filename = os.path.join(save_dir, base_name)
     else:
-        base_name = "1_" + base_name
+        filename = os.path.join(save_dir, f"okunamadi_{base_name}")
 
-    filename = os.path.join(save_dir, base_name)
     cv2.imwrite(filename, img)
     count += 1
 
