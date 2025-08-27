@@ -82,4 +82,3 @@ for subdir, dirs, files in os.walk(root_dir):
             count += 1
     total_count += count
 print(f"ok : {total_count}")
-
