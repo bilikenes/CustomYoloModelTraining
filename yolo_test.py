@@ -1,34 +1,40 @@
 import cv2
 import os
+import random
 from ultralytics import YOLO
 
-model = YOLO(r".\runs\detect\train4\weights\best.pt")
+model = YOLO(r"runs\detect\terminal_model_1\weights\best.pt")
 
-save_dir = r"C:\Users\enesb\OneDrive\Masaüstü\data\detected_plates\15"
+save_dir = r"D:\Medias\test_datas\01\01"
 os.makedirs(save_dir, exist_ok=True)
 
-results = model.predict(
-    source=r"C:\Users\enesb\OneDrive\Masaüstü\data\15",
-    conf=0.50,
-    save=False
-)
+source_dir = r"D:\Medias\fotograflar_Karasu_Belediyesi_Foto"
+
+files = os.listdir(source_dir)
+random.shuffle(files)
 
 count = 0
-for r in results:
-    img = cv2.imread(r.path)
+for file in files:
+    print(file)
+    if not file.lower().endswith((".jpg", ".jpeg", ".png")):
+        continue
+
+    img_path = os.path.join(source_dir, file)
+    results = model.predict(source=img_path, conf=0.50, save=False, verbose=False)
+
+    img = cv2.imread(img_path)
 
     best_box = None
     best_conf = 0.0
 
-    for box in r.boxes:
-        cls = int(box.cls[0])
-        conf = float(box.conf[0])
+    for r in results:
+        for box in r.boxes:
+            cls = int(box.cls[0])
+            conf = float(box.conf[0])
 
-        if cls == 0 and conf > best_conf:
-            best_conf = conf
-            best_box = box
-
-    base_name = os.path.basename(r.path)
+            if cls == 0 and conf > best_conf:
+                best_conf = conf
+                best_box = box
 
     if best_box is not None:
         x1, y1, x2, y2 = map(int, best_box.xyxy[0])
@@ -36,11 +42,12 @@ for r in results:
         label = f"Plate {best_conf:.2f}"
         cv2.putText(img, label, (x1, y1 - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
-        filename = os.path.join(save_dir, base_name)
+        filename = os.path.join(save_dir, file)
     else:
-        filename = os.path.join(save_dir, f"okunamadi_{base_name}")
+        filename = os.path.join(save_dir, f"okunamadi_{file}")
 
     cv2.imwrite(filename, img)
     count += 1
+    print(f"ok : {filename}")
 
-print(f"ok : {count}")
+print(f"total : {count}")

@@ -46,9 +46,9 @@ for i in range(1,10):
 import os
 import cv2
 from ultralytics import YOLO
-model = YOLO(r"D:\Yeni klasör\CustomYoloModelTraining\runs\detect\train4\weights\best.pt")
-root_dir = r"D:\Medias\plates\07"
-save_root = r"D:\Medias\plates\detected_plates\07"
+model = YOLO(r"runs\detect\terminal_model_1\weights\best.pt")
+root_dir = r"D:\Medias\test_datas_for_YOLO\temp"
+save_root = r"D:\Medias\test_datas_for_YOLO\temp_detected"
 total_count = 0
 for subdir, dirs, files in os.walk(root_dir):
     if not files:
