@@ -5,10 +5,10 @@ from ultralytics import YOLO
 
 model = YOLO(r"runs\detect\terminal_model_1\weights\best.pt")
 
-save_dir = r"D:\Medias\test_datas\01\01"
+save_dir = r"C:\Users\PC\Desktop\plates_from_Karasu\detected_plates"
 os.makedirs(save_dir, exist_ok=True)
 
-source_dir = r"D:\Medias\fotograflar_Karasu_Belediyesi_Foto"
+source_dir = r"C:\Users\PC\Desktop\plates_from_Karasu\fotograflar_Karasu_Belediyesi_Foto"
 
 files = os.listdir(source_dir)
 random.shuffle(files)
