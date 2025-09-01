@@ -1,135 +1,90 @@
-from ultralytics import YOLO
 import cv2
+import numpy as np
 import os
-import csv
-import torch
-import torch.nn as nn
-from PIL import Image
-import torchvision.transforms as transforms
-from datetime import datetime
+from ultralytics import YOLO
 
-class CRNN(nn.Module):
-    def __init__(self, imgH, nc, nclass, nh):
-        super(CRNN, self).__init__()
-        self.cnn = nn.Sequential(
-            nn.Conv2d(nc, 64, 3, 1, 1),
-            nn.ReLU(True),
-            nn.MaxPool2d(2, 2),
-            nn.Conv2d(64, 128, 3, 1, 1),
-            nn.ReLU(True),
-            nn.MaxPool2d(2, 2)
-        )
-        self.rnn = nn.LSTM(128 * (imgH//4), nh, bidirectional=True, num_layers=2)
-        self.embedding = nn.Linear(nh*2, nclass)
+import cv2
+import numpy as np
 
-    def forward(self, x):
-        conv = self.cnn(x)
-        b, c, h, w = conv.size()
-        conv = conv.permute(3, 0, 2, 1)
-        conv = conv.reshape(w, b, -1)
-        rnn_out, _ = self.rnn(conv)
-        output = self.embedding(rnn_out)
-        return output
+def straighten_plate(plate_crop):
+    gray = cv2.cvtColor(plate_crop, cv2.COLOR_BGR2GRAY)
+    _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
-characters = '0123456789ABCDEFGHIJKLMNOPRSTUVYZ'
-idx_to_char = {idx+1: char for idx, char in enumerate(characters)}
-idx_to_char[0] = ''  # CTC blank
+    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-nclass = len(characters) + 1
-ocr_model = CRNN(32, 1, nclass, 256)
-ocr_model.load_state_dict(torch.load(r'C:\Users\PC\Desktop\OCR Model\EasyOCRTraining\turkish_plate_crnn.pth', map_location='cpu'))
-ocr_model.eval()
+    if contours:
+        cnt = max(contours, key=cv2.contourArea)
+        rect = cv2.minAreaRect(cnt)
+        (cx, cy), (w, h), angle = rect
 
-ocr_transform = transforms.Compose([
-    transforms.Resize((32, 128)),
-    transforms.ToTensor(),
-    transforms.Normalize((0.5,), (0.5,))
-])
+        if w < h:
+            angle = angle + 90
 
-def decode(preds):
-    prev = -1
-    result = ''
-    for p in preds:
-        if p != prev and p != 0:
-            result += idx_to_char[p.item()]
-        prev = p
-    return result
+        if abs(angle) > 30:
+            (h_img, w_img) = plate_crop.shape[:2]
+            center = (w_img // 2, h_img // 2)
+            M = cv2.getRotationMatrix2D(center, angle, 1.0)
+            plate_crop = cv2.warpAffine(plate_crop, M, (w_img, h_img),
+                                        flags=cv2.INTER_LINEAR,
+                                        borderMode=cv2.BORDER_REPLICATE)
 
-def recognize_plate(img_bgr):
-    pil_img = Image.fromarray(cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY))
-    tensor_img = ocr_transform(pil_img).unsqueeze(0)
-    with torch.no_grad():
-        outputs = ocr_model(tensor_img)
-        outputs = outputs.softmax(2)
-        preds = outputs.argmax(2).squeeze(1)
-        text = decode(preds)
-    return text.strip()
+        gray = cv2.cvtColor(plate_crop, cv2.COLOR_BGR2GRAY)
+        _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-model = YOLO(r"runs\detect\train4\weights\best.pt")
-video_path = r"C:\Users\PC\Desktop\plates\0821_1.mp4"
+        if contours:
+            cnt = max(contours, key=cv2.contourArea)
+            rect = cv2.minAreaRect(cnt)
+            box = cv2.boxPoints(rect)
+            box = box.astype(np.int32)
 
-save_dir = "detected_plates"
-os.makedirs(save_dir, exist_ok=True)
+            W, H = 300, 100
+            dst_pts = np.array([[0,0],[W-1,0],[W-1,H-1],[0,H-1]], dtype="float32")
+            M = cv2.getPerspectiveTransform(np.float32(box), dst_pts)
+            warped = cv2.warpPerspective(plate_crop, M, (W, H))
+            return warped
 
-csv_file = os.path.join(save_dir, "detections.csv")
-with open(csv_file, mode="w", newline="") as f:
-    writer = csv.writer(f)
-    writer.writerow(["filename", "plate_text", "class_id", "confidence", "time_sec", "x1", "y1", "x2", "y2"])
+    return plate_crop
 
-cap = cv2.VideoCapture(video_path)
-fps = cap.get(cv2.CAP_PROP_FPS)
-frame_count = 0
-save_count = 0
-frame_skip = 2
 
-while cap.isOpened():
-    ret, frame = cap.read()
-    if not ret:
-        break
+model = YOLO(r"runs\detect\terminal_model_1\weights\best.pt")
+root_dir = r"D:\Medias\fotograflar_Karasu_Belediyesi_Foto\day_photos\02"
+save_root = r"D:\Medias\test_datas\01\04"
+total_count = 0
 
-    frame_count += 1
-    if frame_count % frame_skip != 0:
+for subdir, dirs, files in os.walk(root_dir):
+    if not files:
         continue
+    relative_path = os.path.relpath(subdir, root_dir)
+    save_dir = os.path.join(save_root, relative_path)
+    os.makedirs(save_dir, exist_ok=True)
 
-    current_time_sec = frame_count / fps
-    print(f" {current_time_sec:.2f} saniye")
+    for file in files:
+        file_path = os.path.join(subdir, file)
+        results = model.predict(source=file_path, conf=0.50, save=False)
 
-    frame_resized = cv2.resize(frame, (1280, 720)) 
-    results = model.predict(frame_resized, conf=0.50, verbose=False)
+        for r in results:
+            best_box = None
+            best_conf = 0.0
+            for box in r.boxes:
+                cls = int(box.cls[0])
+                conf = float(box.conf[0])
+                if cls == 0 and conf > 0.50 and conf > best_conf:
+                    best_conf = conf
+                    best_box = box
 
-    for r in results:
-        for box in r.boxes:
-            cls = int(box.cls[0])
-            conf = float(box.conf[0])
+            if best_box is not None:
+                x1, y1, x2, y2 = map(int, best_box.xyxy[0])
+                img = cv2.imread(r.path)
+                plate_crop = img[y1:y2, x1:x2]
 
-            if cls == 0 and conf > 0.25:
-                x1, y1, x2, y2 = map(int, box.xyxy[0])
-                plate_img = frame_resized[y1:y2, x1:x2]
+                plate_warped = straighten_plate(plate_crop)
 
-                plate_text = recognize_plate(plate_img)
-                if len(plate_text) > 2:  
-                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    filename = f"{save_dir}/{plate_text}-{timestamp}.jpg"
-                else:
-                    filename = f"{save_dir}/unknown-{save_count}.jpg"
+                base_name = os.path.basename(r.path)
+                plate_name = base_name.split("-")[0] + ".jpg"
+                filename = os.path.join(save_dir, plate_name)
+                cv2.imwrite(filename, plate_warped)
+                print(f"saved warped plate: {filename}")
+                total_count += 1
 
-                cv2.imwrite(filename, plate_img)
-
-                with open(csv_file, mode="a", newline="") as f:
-                    writer = csv.writer(f)
-                    writer.writerow([filename, plate_text, cls, conf, current_time_sec, x1, y1, x2, y2])
-
-                print(f"[INFO] {current_time_sec:.2f}s → {plate_text} kaydedildi: {filename}")
-                save_count += 1
-
-                cv2.rectangle(frame_resized, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                cv2.putText(frame_resized, plate_text,
-                            (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX,
-                            0.8, (0, 255, 0), 2)
-
-    cv2.imshow("Detected Plates", frame_resized)
-    if cv2.waitKey(1) & 0xFF == 27:
-        break
-
-cap.release()
-cv2.destroyAllWindows()
+print(f"Toplam kaydedilen plaka: {total_count}")

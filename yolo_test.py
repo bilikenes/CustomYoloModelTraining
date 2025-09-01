@@ -5,10 +5,10 @@ from ultralytics import YOLO
 
 model = YOLO(r"runs\detect\terminal_model_1\weights\best.pt")
 
-save_dir = r"C:\Users\PC\Desktop\plates_from_Karasu\detected_plates"
+save_dir = r"D:\Medias\night_images"
 os.makedirs(save_dir, exist_ok=True)
 
-source_dir = r"C:\Users\PC\Desktop\plates_from_Karasu\fotograflar_Karasu_Belediyesi_Foto"
+source_dir = r"D:\Medias\fotograflar_Karasu_Belediyesi_Foto\night_photos"
 
 files = os.listdir(source_dir)
 random.shuffle(files)
@@ -20,21 +20,31 @@ for file in files:
         continue
 
     img_path = os.path.join(source_dir, file)
-    results = model.predict(source=img_path, conf=0.50, save=False, verbose=False)
+    img_path = os.path.join(source_dir, file)
+
+    if not os.path.exists(img_path):
+        print(f"[ERROR] File not found: {img_path}")
+        continue
 
     img = cv2.imread(img_path)
+    if img is None:
+        print(f"[ERROR] Could not read image: {img_path}")
+        continue
+
+    results = model.predict(source=img_path, conf=0.50, save=False, verbose=False)
+
 
     best_box = None
     best_conf = 0.0
 
-    for r in results:
-        for box in r.boxes:
-            cls = int(box.cls[0])
-            conf = float(box.conf[0])
+    r = results[0]
+    for box in r.boxes:
+        cls = int(box.cls[0])
+        conf = float(box.conf[0])
 
-            if cls == 0 and conf > best_conf:
-                best_conf = conf
-                best_box = box
+        if cls == 0 and conf > best_conf:
+            best_conf = conf
+            best_box = box
 
     if best_box is not None:
         x1, y1, x2, y2 = map(int, best_box.xyxy[0])
@@ -47,7 +57,7 @@ for file in files:
         filename = os.path.join(save_dir, f"okunamadi_{file}")
 
     cv2.imwrite(filename, img)
+    print(f"{count}-) ok : {filename}")
     count += 1
-    print(f"ok : {filename}")
 
 print(f"total : {count}")

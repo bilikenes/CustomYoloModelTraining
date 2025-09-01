@@ -2,10 +2,10 @@ import os
 from ultralytics import YOLO
 from PIL import Image
 
-model = YOLO(r"runs\detect\terminal_model_1\weights\best.pt")
+model = YOLO(r"runs\detect\terminal_model_1_2\weights\best.pt")
 
-image_dir = r"C:\Users\PC\Desktop\dataset_for_YOLO\test\images"
-label_dir = r"C:\Users\PC\Desktop\dataset_for_YOLO\test\labels"
+image_dir = r"D:\Medias\dataset_create\train\_images"
+label_dir = r"D:\Medias\dataset_create\train\labels"
 os.makedirs(label_dir, exist_ok=True)
 
 image_files = [f for f in os.listdir(image_dir) if f.lower().endswith(('.jpg', '.png', '.jpeg'))]

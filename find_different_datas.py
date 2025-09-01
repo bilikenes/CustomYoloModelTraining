@@ -53,3 +53,25 @@
 
 # print("ok.")
 
+import os
+import shutil
+
+klasor1 = r"D:\Medias\dataset_create\train\images"    # dikdörtgenli resimler
+klasor2 = r"D:\Medias\night_images"  
+hedef   = r"D:\Medias\dataset_create\train\_images"   
+
+os.makedirs(hedef, exist_ok=True)
+
+dosyalar1 = set(os.listdir(klasor1))
+dosyalar2 = set(os.listdir(klasor2))
+
+ortak_dosyalar = dosyalar1.intersection(dosyalar2)
+
+print(f"{len(ortak_dosyalar)} dosya bulundu.")
+
+for dosya in ortak_dosyalar:
+    kaynak = os.path.join(klasor2, dosya)
+    hedef_yol = os.path.join(hedef, dosya)
+    shutil.copy2(kaynak, hedef_yol)
+
+print("Kopyalama işlemi tamamlandı.")

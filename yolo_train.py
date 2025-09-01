@@ -4,9 +4,11 @@ def train_model():
 
     model = YOLO('yolov12n.pt')
     results = model.train(
-        data='C:/Users/PC/Desktop/plates/dataset/data.yaml',
+        data=r'D:\Medias\dataset_create\for_dataset\data.yaml',
         epochs=50,
-        device=0
+        imgsz=640,              
+        batch=16,              
+        name="terminal_model_4" ,
     )
 
 if __name__ == "__main__":
